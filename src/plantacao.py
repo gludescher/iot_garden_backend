@@ -61,21 +61,9 @@ def add_plantacao():
     if request.method == 'POST':
         login = request.json['login']
         planta = request.json['planta']
-        # tempMin = request.json['tempMin']
-        # tempMax = request.json['tempMax']
-        # umidMin = request.json['umidMin']
-        # umidMax = request.json['umidMax']
 
         new_plantacao = Plantacao(planta, login)
-        db.session.add(new_plantacao)
-        db.session.commit()
-
-        response = plantacao_schema.dump(new_plantacao)
-        print("\n \n \n \n")
-        print(response,type(response))
-        print("\n \n \n \n")
-        
-        return jsonify(response)
+        return synchronous_db_insert(object=new_plantacao, object_schema=plantacao_schema, path='plantacoes')
 
 # endpoint to show all lines
 @app.route("/plantacao", methods=['GET'])

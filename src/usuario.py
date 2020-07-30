@@ -55,21 +55,9 @@ def add_usuario():
     if request.method == 'POST':
         nome = request.json['nome']
         login = request.json['login']
+        
         new_usuario = Usuario(nome, login)
-        failed = False
-        try:
-            db.session.add(new_usuario)
-            db.session.commit()
-            response = usuario_schema.dump(new_usuario)
-        except Exception as e:
-            db.session.rollback()
-            db.session.flush()
-            failed = True
-            return jsonify({'SQL Error': 'Login já existente'}), 400
-        if not failed:
-            aws_response = post_to_aws("usuarios", response)
-            print(aws_response)
-        return jsonify(response)
+        return synchronous_db_insert(object=new_usuario, object_schema=usuario_schema, path='usuarios') 
 
 # endpoint to show all lines
 @app.route("/usuario", methods=['GET'])
