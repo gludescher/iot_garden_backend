@@ -1,4 +1,16 @@
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
+from flask_cors import CORS, cross_origin
+import json 
+import os
+import datetime
+import requests
 import serial
+
+app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 class DataReceiver(): 
     #Configurações da Porta Serial
@@ -57,13 +69,32 @@ class DataReceiver():
 
         return string_serial
     
+################################################## R O U T E S ##################################################
+@app.route("/")
+def homepage():
 
-def main():
-    data_receiver = DataReceiver() 
-    data_receiver.close()
-    data_receiver.open()
-    while True:
-        data_receiver.receive_data()
-        print(data_receiver.medicoes)
+    response = {
+        "/unknown_sensors [GET]": "retrieve all new sensors installed"
+    } 
+    return jsonify(response)
 
-main()
+
+# endpoint to create new line
+@app.route("/unknown_sensors", methods=['GET'])
+@cross_origin(origin='*')
+def get_fila():
+    if request.method == 'GET':
+        data_receiver = DataReceiver() 
+        data_receiver.close()
+        data_receiver.open()
+        while True:
+            data_receiver.receive_data()
+            if len(data_receiver.medicoes.keys()) > 0:
+                break
+        
+        return jsonify(data_receiver.medicoes)
+                
+############################################################################################################
+
+if __name__ == '__main__':
+    app.run(debug=True)
