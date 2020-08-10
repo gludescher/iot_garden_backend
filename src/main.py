@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from sqlalchemy import Column, Integer, DateTime
 from flask_cors import CORS
-from garden_utils import app, db
+from garden_utils import app, db, post_to_aws
 import json 
 import os
 import datetime
@@ -13,6 +13,7 @@ from usuario import Usuario
 from plantacao import Plantacao
 from sensor import Sensor
 from medicao import Medicao, get_unposted_medicoes
+import medicao
 import time
 import atexit
 
@@ -20,12 +21,39 @@ threads = []
 
 def post_medicoes_thread(wait=30):
     print(" Thread para POST de medições iniciada ".center(80, '='))
-    time.sleep(wait)
     while True:
         time.sleep(wait)
         medicoes = get_unposted_medicoes()
-        print(datetime.datetime.now())
-        print(medicoes)
+
+        print(" {} Realizando POST de medições ".format(datetime.datetime.now()).center(80, '='))
+        print("{} medições não sincronizadas encontradas: ".format(len(medicoes)))
+
+        for m in medicoes:
+            sensor = Sensor.query.get(m['idSensor'])
+            plantacao = Plantacao.query.get(sensor.idPlantacao)
+            login = plantacao.login
+            medicao_aws = {
+                "login":login,
+                "idPlantacao":str(sensor.idPlantacao),
+                "idSensor":str(m['idSensor']),
+                "horaMedicao":str(m['timestamp']),
+                "medicao":{
+                    m["tipo"]:str(m["medida"])
+                }
+            }
+            try:
+                response = post_to_aws("medicoes", medicao_aws)
+                # print(response.status_code)
+                # if response.status_code != 200:
+                #     raise Exception("AWS Exception: POST could not be made.")
+                medicao = Medicao.query.get(m['idMedicao'])
+                medicao.status = 1
+                db.session.commit()
+                print("Success")
+            except Exception as e:
+                print("Failed: {}".format(e))
+
+        print("".center(80,'=') + "\n")
         
         # print("I'm a new kinda thread around here")
 
@@ -53,10 +81,10 @@ def shutdown():
 
 if __name__ == '__main__':
     print(" Aquecendo os motores!!! ".center(90, '='))
-    # t1 = Thread(target=post_medicoes_thread, daemon=True)
-    # t1.start()
-    # threads.append(t1)
+    t1 = Thread(target=post_medicoes_thread, daemon=True)
+    t1.start()
+    threads.append(t1)
     db.create_all()
-    app.run(debug=True, port=5001)
+    app.run(debug=False, port=5001)
 
 

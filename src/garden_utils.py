@@ -33,11 +33,19 @@ def post_to_aws(path, object):
 # Multiple actions are necessary to guarantee the data persistance in 
 # both DBs. When one of those fails, none of them occur.
 # ################################################################### #
-def synchronous_db_insert(object, object_schema, path):
+def synchronous_db_insert(object, object_schema, path, login=None):
+        
     try:
         db.session.add(object)
         db.session.flush()
         sql_response = object_schema.dump(object)
+        if "sensores" in path:
+            sql_response['login'] = str(login)
+            sql_response['idSensor'] = str(sql_response['idSensor'])
+            sql_response['tipoSensor'] = sql_response['tipo']
+            print(" SENSOR ".center(80, "="))
+            print("\n\n")
+            print(sql_response)
     except Exception as e:
         db.session.rollback()
         db.session.flush()
@@ -46,12 +54,14 @@ def synchronous_db_insert(object, object_schema, path):
 
     try:
         aws_response = post_to_aws(path, sql_response)
+        if aws_response.status_code != 200:
+            raise Exception("Bad request (err... probably")
     except Exception as e:
         db.session.rollback()
         db.session.flush()
         return jsonify({'AWS Error': str(e)}), 400
 
-        db.session.commit()
+    db.session.commit()
     return jsonify(sql_response), 200
     
     
