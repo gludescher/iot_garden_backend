@@ -9,7 +9,9 @@ import datetime
 import requests
 # import atexit
 
-_CLOUD_DOMAIN = "http://localhost:5000"
+# _CLOUD_DOMAIN = "http://localhost:5000"
+
+_CLOUD_DOMAIN = "https://on00qnj8jh.execute-api.us-east-1.amazonaws.com/dev"
 
 app = Flask(__name__)
 cors = CORS(app)
