@@ -8,6 +8,7 @@ import os
 import datetime
 import requests
 from garden_utils import *
+import time
 
 # app = Flask(__name__)
 # cors = CORS(app)
@@ -51,6 +52,14 @@ medicao_schema = MedicaoSchema()
 medicoes_schema = MedicaoSchema(many=True)
 
 ################################################## R O U T E S ##################################################
+def get_unposted_medicoes():
+    medicoes = Medicao.query.filter(Medicao.status==_NOT_POSTED)
+    response = medicoes_schema.dump(medicoes)
+    return response
+
+
+        
+
 @app.route("/")
 def medicao_homepage():
     text = "Este eh o backend do sistema de IoG - Internet of Gardens. Voce pode acessar os endpoints aqui descritos."
@@ -98,13 +107,7 @@ def get_medicao():
         return jsonify(response)
         
 # @app.route("/medicao/unposted", methods=['GET'])
-def get_unposted_medicoes():
-    # if request.method == 'GET':
-    medicoes = Medicao.query.filter(Medicao.status==_NOT_POSTED)
-    
-    response = medicoes_schema.dump(medicoes)
-    
-    return response
+
 
 
 # endpoint to get line detail by id

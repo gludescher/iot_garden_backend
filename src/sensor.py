@@ -8,6 +8,7 @@ import os
 import datetime
 import requests
 from garden_utils import *
+from plantacao import Plantacao
 
 # app = Flask(__name__)
 # cors = CORS(app)
@@ -69,15 +70,21 @@ def add_sensor():
         idPlantacao = request.json['idPlantacao']
 
         new_sensor = Sensor(codigo, tipo, idPlantacao)
-        db.session.add(new_sensor)
-        db.session.commit()
+        # sql_response = sensor_schema.dump(new_sensor)
+        login = Plantacao.query.get(idPlantacao).login
+        # db.session.add(new_sensor)
+        # db.session.commit()
 
-        response = sensor_schema.dump(new_sensor)
-        print("\n \n \n \n")
-        print(response,type(response))
-        print("\n \n \n \n")
+        # response = sensor_schema.dump(new_sensor)
+        # print("\n \n \n \n")
+        # print(response,type(response))
+        # print("\n \n \n \n")
+
+        # new_plantacao = Plantacao(planta, login)
         
-        return jsonify(response)
+        return synchronous_db_insert(object=new_sensor, object_schema=sensor_schema, path='sensores', login=login)
+        
+        # return jsonify(response)
 
 # endpoint to show all lines
 @app.route("/sensor", methods=['GET'])
