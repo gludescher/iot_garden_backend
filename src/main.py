@@ -19,7 +19,7 @@ import atexit
 
 threads = []
 
-def post_medicoes_thread(wait=30):
+def post_medicoes_thread(wait=15):
     print(" Thread para POST de medições iniciada ".center(80, '='))
     while True:
         time.sleep(wait)
